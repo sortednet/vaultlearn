@@ -1,0 +1,13 @@
+#spring.cloud.vault.token=00000000-0000-0000-0000-000000000000
+#spring.cloud.vault.scheme=http
+
+
+spring.application.name: springboot-client2
+spring.cloud.vault:
+    host: localhost
+    port: 8200
+    scheme: http
+    authentication: TOKEN
+    token: 00000000-0000-0000-0000-000000000000
+    kv:
+        enabled=true:
