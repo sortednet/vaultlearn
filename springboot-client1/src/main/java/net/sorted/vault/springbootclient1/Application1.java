@@ -10,6 +10,7 @@ import org.springframework.vault.core.VaultTransitOperations;
 import org.springframework.vault.support.VaultMount;
 import org.springframework.vault.support.VaultResponse;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @SpringBootApplication
@@ -25,8 +26,10 @@ public class Application1 implements CommandLineRunner {
     @Override
     public void run(String... strings) throws Exception {
 
+        String secretPath = "secret/data/github";
+
         // You usually would not print a secret to stdout
-		VaultResponse response = vaultTemplate.read("secret/data/github");
+		VaultResponse response = vaultTemplate.read(secretPath);
 
         Map<String, Object> data = (Map<String, Object>) response.getData().get("data");
 		Object githubKey = data.get("github.oauth2.key");
@@ -35,6 +38,7 @@ public class Application1 implements CommandLineRunner {
         System.out.println(githubKey);
         System.out.println("-------------------------------");
         System.out.println();
+
 
         // Let's encrypt some data using the Transit backend.
         VaultTransitOperations transitOperations = vaultTemplate.opsForTransit();
@@ -67,5 +71,14 @@ public class Application1 implements CommandLineRunner {
         System.out.println(plaintext);
         System.out.println("-------------------------------");
         System.out.println();
+
+
+        // NB kv v2 has 'data' in the path. Need to align to this using a wrapping 'data' map with just the data key.
+        Map<String, Object> dw = new HashMap<>();
+        dw.put("data", data);
+        data.put("bar-key", ciphertext);
+        vaultTemplate.write(secretPath, dw);
+
+
     }
 }
