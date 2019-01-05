@@ -26,13 +26,32 @@ public class Application1 implements CommandLineRunner {
     @Override
     public void run(String... strings) throws Exception {
 
-        String secretPath = "secret/data/github";
+        int version = 2;
+        if (strings.length > 0) {
+            String v = strings[0];
+            try {
+                version = Integer.parseInt(v);
+            } catch (NumberFormatException e) {
+                System.out.println("Version arg must be an integer - '" + v + "' is not an int");
+                System.exit(-1);
+            }
+        }
+
+        String secretPath = (version == 1 ) ? "secret/github" : "secret/data/github";
 
         // You usually would not print a secret to stdout
 		VaultResponse response = vaultTemplate.read(secretPath);
 
-        Map<String, Object> data = (Map<String, Object>) response.getData().get("data");
-		Object githubKey = data.get("github.oauth2.key");
+        Map<String, Object> data;
+        Object githubKey;
+        if (version == 1) {
+            data = response.getData();
+        } else {
+            data = (Map<String, Object>) response.getData().get("data");
+        }
+
+        githubKey = data.get("github.oauth2.key");
+
 		System.out.println("Value of github.oauth2.key");
         System.out.println("-------------------------------");
         System.out.println(githubKey);
@@ -74,8 +93,16 @@ public class Application1 implements CommandLineRunner {
 
 
         // NB kv v2 has 'data' in the path. Need to align to this using a wrapping 'data' map with just the data key.
-        Map<String, Object> dw = new HashMap<>();
-        dw.put("data", data);
+        Map<String, Object> dw;
+        if (version == 1) {
+            dw = data;
+        } else {
+            dw = new HashMap<>();
+            dw.put("data", data);
+        }
+
+
+
         data.put("bar-key", ciphertext);
         vaultTemplate.write(secretPath, dw);
 
